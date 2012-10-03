@@ -39,7 +39,6 @@
 @class GTBranch;
 @class GTConfiguration;
 
-
 // Options returned from the enumerateFileStatusUsingBlock: function
 enum {
 	GTRepositoryFileStatusIndexNew = GIT_STATUS_INDEX_NEW,
@@ -57,11 +56,13 @@ typedef unsigned int GTRepositoryFileStatus;
 
 typedef void (^GTRepositoryStatusBlock)(NSURL *fileURL, GTRepositoryFileStatus status, BOOL *stop);
 
-
-@interface GTRepository : NSObject <GTObject> {}
+@interface GTRepository : NSObject <GTObject>
 
 @property (nonatomic, assign, readonly) git_repository *git_repository;
+// The file URL for the repository's working directory.
 @property (nonatomic, readonly, strong) NSURL *fileURL;
+// The file URL for the repository's .git directory.
+@property (nonatomic, readonly, strong) NSURL *gitDirectoryURL;
 @property (nonatomic, readonly, strong) GTEnumerator *enumerator; // should only be used on the main thread
 @property (nonatomic, readonly, strong) GTIndex *index;
 @property (nonatomic, readonly, strong) GTObjectDatabase *objectDatabase;
@@ -162,16 +163,6 @@ typedef void (^GTRepositoryStatusBlock)(NSURL *fileURL, GTRepositoryFileStatus s
 //
 // returns the local commits, an empty array if there is no remote branch, or nil if an error occurred
 - (NSArray *)localCommitsRelativeToRemoteBranch:(GTBranch *)remoteBranch error:(NSError **)error;
-
-- (NSArray*) remoteNames;
-- (BOOL) hasRemoteNamed: (NSString*) potentialRemoteName;
-
-// Returns a NSURL to the git working directory
-// NOTE: the fileURL property of GTRepository points to the .git folder
-// this repository.
-//
-// Returns a path to the git working directory
-- (NSURL*) repositoryURL;
 
 // Pack all references in the repository.
 //

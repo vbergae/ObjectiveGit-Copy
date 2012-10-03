@@ -1,8 +1,8 @@
 //
-//  NSError+Git.h
+//  GTRepositoryPackTest.m
 //  ObjectiveGitFramework
 //
-//  Created by Timothy Clem on 2/17/11.
+//  Created by Timothy Clem on 2/28/11.
 //
 //  The MIT License
 //
@@ -27,26 +27,37 @@
 //  THE SOFTWARE.
 //
 
-extern NSString * const GTGitErrorDomain;
+#import "Contants.h"
 
 
-@interface NSError (Git)
+@interface GTRepositoryPackTest : SenTestCase {
+	
+	GTRepository *repo;
+}
+@end
 
-// Creates an error for the given libgit2 error code. The returned error's NSLocalizedDescriptionKey is filled with `git_lasterror` or `strerror` if an OS error occurs.
-//
-// code - the libgit2 error code
-//
-// returns the created error object
-+ (NSError *)git_errorFor:(NSInteger)code;
+@implementation GTRepositoryPackTest
 
-// Creates an error for the given libgit2 error code. The returned error's NSLocalizedDescriptionKey is the given description and the NSLocalizedFailureReasonErrorKey is libgit2's description of the last error.
-//
-// code - the libgit2 error code
-//
-// returns the created error object
-+ (NSError *)git_errorFor:(NSInteger)code withAdditionalDescription:(NSString *)desc;
+- (void)setUp {
+	
+	NSError *error = nil;
+	repo = [GTRepository repositoryWithURL:[NSURL fileURLWithPath:TEST_REPO_PATH(self.class)] error:&error];
+}
 
-/* Error helpers for common libgit2 errors */
-+ (NSError *)git_errorForMkStr:(NSInteger)code;
+//- (void)testCanTellIfPackedObjectExists {
+//	
+//	NSError *error = nil;
+//	STAssertTrue([repo.objectDatabase containsObjectWithSha:@"41bc8c69075bbdb46c5c6f0566cc8cc5b46e8bd9" error:&error], nil);
+//	STAssertTrue([repo.objectDatabase containsObjectWithSha:@"f82a8eb4cb20e88d1030fd10d89286215a715396" error:&error], nil);
+//}
+
+//- (void)testCanReadAPackedObjectFromDb {
+//	
+//	NSError *error = nil;
+//	GTOdbObject *obj = [repo.objectDatabase objectWithSha:@"41bc8c69075bbdb46c5c6f0566cc8cc5b46e8bd9" error:&error];
+//	
+//	STAssertEquals(230, (int)[obj.data length], nil);
+//	STAssertEquals(GTObjectTypeCommit, obj.type, nil);
+//}
 
 @end

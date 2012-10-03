@@ -1,8 +1,8 @@
 //
-//  NSError+Git.h
+//  Test.m
 //  ObjectiveGitFramework
 //
-//  Created by Timothy Clem on 2/17/11.
+//  Created by Timothy Clem on 2/22/11.
 //
 //  The MIT License
 //
@@ -27,26 +27,39 @@
 //  THE SOFTWARE.
 //
 
-extern NSString * const GTGitErrorDomain;
+#import "Contants.h"
+#import "NSData+Git.h"
+#import "NSString+Git.h"
 
+@interface Test : SenTestCase {}
+@end
 
-@interface NSError (Git)
+@implementation Test
 
-// Creates an error for the given libgit2 error code. The returned error's NSLocalizedDescriptionKey is filled with `git_lasterror` or `strerror` if an OS error occurs.
-//
-// code - the libgit2 error code
-//
-// returns the created error object
-+ (NSError *)git_errorFor:(NSInteger)code;
+- (void)testCanConvertHexToRaw {
+	
+	NSError *error = nil;
+    git_oid oid;
+    NSString *sha = @"ce08fe4884650f067bd5703b6a59a8b3b3c99a09";
+    STAssertTrue([sha git_getOid:&oid error:&error], nil);
+	NSData *raw = [NSData git_dataWithOid:&oid];
+	STAssertNil(error, [error localizedDescription]);
+	
+	NSString *b64raw = [raw git_base64EncodedString];
+	STAssertEqualObjects(@"zgj+SIRlDwZ71XA7almos7PJmgk=", b64raw, nil);
+}
 
-// Creates an error for the given libgit2 error code. The returned error's NSLocalizedDescriptionKey is the given description and the NSLocalizedFailureReasonErrorKey is libgit2's description of the last error.
-//
-// code - the libgit2 error code
-//
-// returns the created error object
-+ (NSError *)git_errorFor:(NSInteger)code withAdditionalDescription:(NSString *)desc;
-
-/* Error helpers for common libgit2 errors */
-+ (NSError *)git_errorForMkStr:(NSInteger)code;
+- (void)testCanConvertRawToHex {
+	
+	NSString *rawb64 = @"FqASNFZ4mrze9Ld1ITwjqL109eA=";
+	NSData *raw = [NSData git_dataWithBase64String:rawb64];
+    git_oid oid;
+    NSError *error = nil;
+    [raw git_getOid:&oid error:&error];
+    STAssertNil(error, [error localizedDescription]);
+	NSString *hex = [NSString git_stringWithOid:&oid];
+	
+	STAssertEqualObjects(hex, @"16a0123456789abcdef4b775213c23a8bd74f5e0", nil);
+}
 
 @end

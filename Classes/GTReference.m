@@ -28,6 +28,9 @@
 #import "NSError+Git.h"
 #import "NSString+Git.h"
 
+@interface GTReference ()
+@property (nonatomic, readwrite) git_reference *git_reference;
+@end
 
 @implementation GTReference
 
@@ -37,7 +40,11 @@
 
 - (void)dealloc {
 	self.repository = nil;
-	if(self.git_reference != NULL) git_reference_free(self.git_reference);
+
+	if(self.git_reference != NULL) {
+		git_reference_free(self.git_reference);
+		self.git_reference = NULL;
+	}
 }
 
 
@@ -114,6 +121,16 @@
 	return self;
 }
 
+- (id)initWithGitReference:(git_reference *)ref repository:(GTRepository *)repo {
+	self = [super init];
+	if (self == nil) return nil;
+
+	self.git_reference = ref;
+	self.repository = repo;
+
+	return self;
+}
+
 - (NSString *)name {
 	if(![self isValid]) return nil;
 	
@@ -122,6 +139,7 @@
 	
 	return [NSString stringWithUTF8String:refName];
 }
+
 - (BOOL)setName:(NSString *)newName error:(NSError **)error {
 	if(![self isValid]) {
 		if(error != NULL) {
@@ -135,6 +153,10 @@
 	if(gitError < GIT_OK) {
 		if(error != NULL)
 			*error = [NSError git_errorFor:gitError withAdditionalDescription:@"Failed to rename reference."];
+
+		// Our reference might have been deleted (which implies being freed), so
+		// we should invalidate it.
+		self.git_reference = NULL;
 		return NO;
 	}
 	return YES;
@@ -199,12 +221,14 @@
 	}
 	
 	int gitError = git_reference_delete(self.git_reference);
+	self.git_reference = NULL; /* this has been free'd */
+
 	if(gitError < GIT_OK) {
 		if(error != NULL)
 			*error = [NSError git_errorFor:gitError withAdditionalDescription:@"Failed to delete reference."];
 		return NO;
 	}
-	self.git_reference = NULL; /* this has been free'd */
+
 	return YES;
 }
 
@@ -234,7 +258,6 @@
 		}
 		
 		self.git_reference = NULL;
-		
 		return NO;
 	}
 	

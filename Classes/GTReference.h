@@ -42,8 +42,8 @@ typedef enum {
 
 @interface GTReference : NSObject <GTObject> {}
 
-@property (nonatomic, assign) git_reference *git_reference;
-@property (nonatomic, unsafe_unretained) GTRepository *repository;
+@property (nonatomic, readonly) git_reference *git_reference;
+@property (nonatomic, strong) GTRepository *repository;
 @property (nonatomic, readonly) NSString *type;
 @property (nonatomic, readonly) const git_oid *oid;
 @property (nonatomic, readonly, getter=isValid) BOOL valid;
@@ -57,6 +57,8 @@ typedef enum {
 
 + (id)referenceByResolvingSymbolicReference:(GTReference *)symbolicRef error:(NSError **)error;
 - (id)initByResolvingSymbolicReference:(GTReference *)symbolicRef error:(NSError **)error;
+
+- (id)initWithGitReference:(git_reference *)ref repository:(GTRepository *)repository;
 
 - (NSString *)target;
 - (BOOL)setTarget:(NSString *)newTarget error:(NSError **)error;

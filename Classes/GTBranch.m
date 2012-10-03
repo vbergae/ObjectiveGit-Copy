@@ -33,7 +33,7 @@
 
 @interface GTBranch ()
 @property (nonatomic, strong) GTReference *reference;
-@property (nonatomic, unsafe_unretained) GTRepository *repository;
+@property (nonatomic, strong) GTRepository *repository;
 @end
 
 @implementation GTBranch
@@ -218,12 +218,44 @@
 }
 
 - (BOOL)deleteWithError:(NSError **)error {
-	BOOL success = [self.reference deleteWithError:error];
-	if(success) {
-		self.reference = nil;
+	int gitError = git_branch_delete(self.reference.git_reference);
+	if(gitError != GIT_OK) {
+		if(error != NULL) *error = [NSError git_errorFor:gitError withAdditionalDescription:@"Failed to delete branch."];
+		return NO;
 	}
 	
-	return success;
+	self.reference = nil;
+	
+	return YES;
+}
+
+- (GTBranch *)trackingBranchWithError:(NSError **)error success:(BOOL *)success {
+	if (self.branchType == GTBranchTypeRemote) return self;
+
+	git_reference *trackingRef = NULL;
+	int gitError = git_branch_tracking(&trackingRef, self.reference.git_reference);
+
+	// GIT_ENOTFOUND means no tracking branch found.
+	if (gitError == GIT_ENOTFOUND) {
+		if (success != NULL) *success = YES;
+		return nil;
+	}
+
+	if (gitError != GIT_OK) {
+		if (success != NULL) *success = NO;
+		if (error != NULL) *error = [NSError git_errorFor:gitError withAdditionalDescription:[NSString stringWithFormat:@"Failed to create reference to tracking branch from %@", self]];
+		return nil;
+	}
+
+	if (trackingRef == NULL) {
+		if (success != NULL) *success = NO;
+		if (error != NULL) *error = [NSError git_errorFor:gitError withAdditionalDescription:[NSString stringWithFormat:@"Got a NULL remote ref for %@", self]];
+		return nil;
+	}
+
+	if (success != NULL) *success = YES;
+
+	return [[self class] branchWithReference:[[GTReference alloc] initWithGitReference:trackingRef repository:self.repository] repository:self.repository];
 }
 
 @end
