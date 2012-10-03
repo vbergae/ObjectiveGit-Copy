@@ -23,7 +23,7 @@
 //  THE SOFTWARE.
 //
 
-#import "git2.h"
+#import <ObjectiveGit/git2.h>
 
 #import <ObjectiveGit/GTRepository.h>
 #import <ObjectiveGit/GTEnumerator.h>
